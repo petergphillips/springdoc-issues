@@ -1,5 +1,6 @@
 package com.example.springdocissues
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -7,7 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDO
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.test.web.reactive.server.WebTestClient
 import tools.jackson.databind.json.JsonMapper
-import java.io.FileWriter
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -15,40 +15,31 @@ class IssuesControllerTest(
   @param:Autowired val webTestClient: WebTestClient,
 ) {
   @Test
-  fun `parameter should be required`() {
-    webTestClient.get().uri("/")
-      .exchange()
-      .expectStatus()
-      .isBadRequest
-  }
-
-  @Test
-  fun `greet endpoint parameter should be marked as required in api docs`() {
+  fun `Greeting anyName parameter should not just have a type of null`() {
     webTestClient.get().uri("/v3/api-docs")
       .exchange()
       .expectStatus()
       .isOk
       .expectBody()
-      .consumeWith(System.out::println)
-      .jsonPath("paths./.get.parameters[0].required").isEqualTo("true")
-  .consumeWith {
-    JsonMapper().let { mapper ->
-      mapper.writerWithDefaultPrettyPrinter().writeValue(
-        FileWriter("old.json"),
-        mapper.readTree(it.responseBody!!)
-      )
-    }
-  }
+      .consumeWith {
+        JsonMapper().let { mapper ->
+          mapper.writerWithDefaultPrettyPrinter().writeValue(
+            System.out, mapper.readTree(it.responseBody!!)
+          )
+        }
+      }
+      .jsonPath("components.schemas.Greeting.properties.anyName.type").isEmpty
   }
 
   @Test
-  fun `Greeting name parameter should be marked as required in api docs`() {
+  fun `Greeting stringName parameter should have types of string and null`() {
     webTestClient.get().uri("/v3/api-docs")
       .exchange()
       .expectStatus()
       .isOk
       .expectBody()
-      .consumeWith(System.out::println)
-      .jsonPath("components.schemas.Greeting.required").isEqualTo("name")
+      .jsonPath("components.schemas.Greeting.properties.stringName.type").value<List<String>> {
+        assertThat(it).containsExactlyInAnyOrder("string", "null")
+      }
   }
 }

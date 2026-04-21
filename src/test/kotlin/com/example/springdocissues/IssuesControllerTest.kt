@@ -1,6 +1,5 @@
 package com.example.springdocissues
 
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -28,7 +27,8 @@ class IssuesControllerTest(
           )
         }
       }
-      .jsonPath("components.schemas.Greeting.properties.anyName.type").isEmpty
+      .jsonPath("components.schemas.Greeting.properties.objectName.description")
+      .isEqualTo("The object of the person to greet")
   }
 
   @Test
@@ -38,8 +38,7 @@ class IssuesControllerTest(
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath("components.schemas.Greeting.properties.stringName.type").value<List<String>> {
-        assertThat(it).containsExactlyInAnyOrder("string", "null")
-      }
+      .jsonPath("components.schemas.Greeting.properties.stringName.description")
+      .isEqualTo("The name of the person to greet")
   }
 }
